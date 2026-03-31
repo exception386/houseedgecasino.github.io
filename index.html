@@ -12,35 +12,42 @@
       margin: 0;
       padding: 0;
     }
+
     .container {
-      max-width: 1000px;
+      max-width: 1100px;
       margin: auto;
       padding: 40px 20px;
     }
+
     h1 {
       font-size: 36px;
       margin-bottom: 10px;
       text-align: center;
     }
+
     h2 {
       margin-top: 50px;
       border-bottom: 1px solid #1e293b;
       padding-bottom: 8px;
     }
+
     p {
       color: #cbd5e1;
       line-height: 1.6;
       text-align: center;
     }
+
     .tagline {
       font-size: 18px;
       color: #94a3b8;
       margin-bottom: 20px;
     }
+
     .buttons {
       text-align: center;
       margin-top: 20px;
     }
+
     a.button {
       display: inline-block;
       text-decoration: none;
@@ -49,46 +56,47 @@
       border-radius: 10px;
       font-weight: 600;
     }
+
     .primary {
       background: #ffd700;
       color: #000;
     }
+
     .secondary {
       background: #1e293b;
       color: #fff;
       border: 1px solid #334155;
     }
 
-    /* Screenshot section */
-    .screenshots {
+    .screenshot-section {
       margin-top: 30px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 15px;
     }
 
-    .screenshots img {
+    .carousel-viewport {
+      overflow: hidden;
       width: 100%;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      transition: transform 0.2s ease;
     }
 
-    .screenshots img:hover {
-      transform: scale(1.03);
+    .carousel-track {
+      display: flex;
+      gap: 16px;
+      transition: transform 0.6s ease;
+      will-change: transform;
     }
 
-    /* Mobile scroll feel */
-    @media (max-width: 600px) {
-      .screenshots {
-        display: flex;
-        overflow-x: auto;
-        gap: 12px;
-        padding-bottom: 10px;
-      }
-      .screenshots img {
-        min-width: 70%;
-      }
+    .carousel-track img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+      flex: 0 0 auto;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .screenshot-card {
+      flex: 0 0 auto;
     }
 
     ul {
@@ -106,7 +114,6 @@
 </head>
 <body>
   <div class="container">
-
     <h1>House Edge Casino</h1>
     <p class="tagline">
       The smartest way to learn casino games — no real money, just fun.
@@ -118,14 +125,18 @@
     </div>
 
     <h2>Screenshots</h2>
-    <div class="screenshots">
-      <img src="images/ss1.png" alt="Screenshot 1">
-      <img src="images/ss2.png" alt="Screenshot 2">
-      <img src="images/ss3.png" alt="Screenshot 3">
-      <img src="images/ss4.png" alt="Screenshot 4">
-      <img src="images/ss5.png" alt="Screenshot 5">
-      <img src="images/ss6.png" alt="Screenshot 6">
-      <img src="images/ss7.png" alt="Screenshot 7">
+    <div class="screenshot-section">
+      <div class="carousel-viewport" id="carouselViewport">
+        <div class="carousel-track" id="carouselTrack">
+          <div class="screenshot-card"><img src="images/ss1.png" alt="House Edge Casino screenshot 1"></div>
+          <div class="screenshot-card"><img src="images/ss2.png" alt="House Edge Casino screenshot 2"></div>
+          <div class="screenshot-card"><img src="images/ss3.png" alt="House Edge Casino screenshot 3"></div>
+          <div class="screenshot-card"><img src="images/ss4.png" alt="House Edge Casino screenshot 4"></div>
+          <div class="screenshot-card"><img src="images/ss5.png" alt="House Edge Casino screenshot 5"></div>
+          <div class="screenshot-card"><img src="images/ss6.png" alt="House Edge Casino screenshot 6"></div>
+          <div class="screenshot-card"><img src="images/ss7.png" alt="House Edge Casino screenshot 7"></div>
+        </div>
+      </div>
     </div>
 
     <h2>About the Game</h2>
@@ -155,7 +166,91 @@
     <footer>
       © 2026 Jeff Hockema
     </footer>
-
   </div>
+
+  <script>
+    (function () {
+      const viewport = document.getElementById('carouselViewport');
+      const track = document.getElementById('carouselTrack');
+      const cards = Array.from(track.children);
+
+      const gap = 16;
+      const maxVisible = 3;
+      const minCardWidth = 220;
+      const advanceEveryMs = 5000;
+
+      let visibleCount = 1;
+      let currentIndex = 0;
+      let maxIndex = 0;
+      let timer = null;
+
+      function getVisibleCount() {
+        const viewportWidth = viewport.clientWidth;
+        const possible = Math.floor((viewportWidth + gap) / (minCardWidth + gap));
+        return Math.max(1, Math.min(maxVisible, possible));
+      }
+
+      function layoutCarousel() {
+        visibleCount = getVisibleCount();
+        const viewportWidth = viewport.clientWidth;
+        const cardWidth = (viewportWidth - gap * (visibleCount - 1)) / visibleCount;
+
+        cards.forEach(card => {
+          card.style.width = `${cardWidth}px`;
+        });
+
+        maxIndex = Math.max(0, cards.length - visibleCount);
+
+        if (currentIndex > maxIndex) {
+          currentIndex = 0;
+        }
+
+        updatePosition(false);
+      }
+
+      function updatePosition(animated = true) {
+        track.style.transition = animated ? 'transform 0.6s ease' : 'none';
+        const cardWidth = cards[0].getBoundingClientRect().width;
+        const offset = currentIndex * (cardWidth + gap);
+        track.style.transform = `translateX(-${offset}px)`;
+
+        if (!animated) {
+          requestAnimationFrame(() => {
+            track.style.transition = 'transform 0.6s ease';
+          });
+        }
+      }
+
+      function nextSlide() {
+        if (currentIndex >= maxIndex) {
+          currentIndex = 0;
+        } else {
+          currentIndex += 1;
+        }
+        updatePosition(true);
+      }
+
+      function startAutoScroll() {
+        stopAutoScroll();
+        timer = setInterval(nextSlide, advanceEveryMs);
+      }
+
+      function stopAutoScroll() {
+        if (timer) {
+          clearInterval(timer);
+          timer = null;
+        }
+      }
+
+      window.addEventListener('resize', layoutCarousel);
+      viewport.addEventListener('mouseenter', stopAutoScroll);
+      viewport.addEventListener('mouseleave', startAutoScroll);
+      viewport.addEventListener('touchstart', stopAutoScroll, { passive: true });
+      viewport.addEventListener('touchend', startAutoScroll);
+
+      layoutCarousel();
+      startAutoScroll();
+    })();
+  </script>
 </body>
 </html>
